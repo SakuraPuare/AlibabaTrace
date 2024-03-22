@@ -1,10 +1,14 @@
 import axios from 'axios';
 
+axios.defaults.headers.get['Access-Control-Allow-Origin'] = '*';
+axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*';
+
 // 创建axios实例
 const service = axios.create({
     baseURL: 'http://0.0.0.0:8000/', // api的base_url
     timeout: 5000 // 请求超时时间
 });
+
 
 // request拦截器
 service.interceptors.request.use(
