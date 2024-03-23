@@ -84,7 +84,7 @@ onUnmounted(() => {
         @node-click="handleClickOnNode"
     >
       <template #default="{ node, data }">
-        <span class="text-base text-black w-full" >{{ node.label }}</span>
+        <span class="text-base text-black w-full">{{ node.label }}</span>
       </template>
     </el-tree>
   </el-scrollbar>

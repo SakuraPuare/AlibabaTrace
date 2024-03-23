@@ -89,13 +89,12 @@ const getTableData = (name, page = 1) => {
 }
 
 const getSelect = (data) => {
-  console.log(data)
+  // console.log(data)
   selectedItem.value = data
   if (data.path?.length > 0) {
     TableColumns.value = getColumnDetails(data.path)
     getTableData(data.id, TablePage.value++)
-  }
-  else{
+  } else {
     TableColumns.value = []
     TableData.value = []
   }
@@ -153,11 +152,11 @@ onMounted(() => {
         <el-auto-resizer>
           <template #default="{ height, width }">
             <el-table-v2
-                stimated-row-height
                 :columns="TableColumns"
                 :data="TableData"
                 :height="height"
-                :width="width"/>
+                :width="width"
+                stimated-row-height/>
           </template>
         </el-auto-resizer>
       </div>
