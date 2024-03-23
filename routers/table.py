@@ -13,6 +13,8 @@ router = APIRouter(
     tags=["table"],
 )
 
+def filter(file: pathlib.Path) -> bool:
+    return file.is_file() and file.suffix == ".csv"
 
 def update_list_cache() -> None:
     global list_cache
@@ -33,11 +35,13 @@ def update_tree_cache() -> None:
         return
     for i in table_folder.iterdir():
         if i.is_dir():
-            files = i.iterdir()
+            files = [j for j in i.iterdir() if filter(j)]
+            if not files:
+                continue
             tree_cache[md5(i.name)] = {
                 "name": i.name,
                 "files": {
-                    md5(str(j)): j.name for j in files if j.is_file()
+                    md5(str(j)): j.name for j in files
                 }
             }
 
@@ -62,7 +66,9 @@ async def table_tree():
 
 
 @router.get("/{table_hash}")
-async def table_list(*, table_hash: str, page: int = Query(0)):
+async def table_list(*, table_hash: str, page: int = Query(1)):
+    if page < 1:
+        page = 1
     global list_cache
     if table_hash not in list_cache:
         update_list_cache()
@@ -71,11 +77,11 @@ async def table_list(*, table_hash: str, page: int = Query(0)):
     table = list_cache[table_hash]
     data = []
     with open(table, "r") as f:
-        for i in range(page * 50):
+        for i in range((page - 1) * LINE_EVERY_PAGE):
             f.readline()
-        for i in range(50):
+        for i in range(LINE_EVERY_PAGE):
             line = f.readline()
             if not line:
                 break
             data.append(line.strip())
-    return {"code": 200, "data": '\n'.join(data)}
+    return {"code": 200, "data": data, "count": len(data)}

@@ -1,1 +1,2 @@
 TABLE_FOLDER = 'data'
+LINE_EVERY_PAGE = 50
