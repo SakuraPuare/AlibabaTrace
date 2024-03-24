@@ -13,8 +13,10 @@ router = APIRouter(
     tags=["table"],
 )
 
+
 def filter(file: pathlib.Path) -> bool:
     return file.is_file() and file.suffix == ".csv"
+
 
 def update_list_cache() -> None:
     global list_cache
