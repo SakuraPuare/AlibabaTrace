@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, onUnmounted, reactive, ref } from "vue";
-import { getHeightWithoutHeader } from "../../../utils/utils.js";
+import { getHeightWithoutHeader } from "../../utils/utils.js";
 
 const updateHeight = () => {
   ScrollbarHeight.value = getHeightWithoutHeader();

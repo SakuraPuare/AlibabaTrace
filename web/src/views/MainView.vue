@@ -1,10 +1,7 @@
-<script setup>
-import Header from "../components/HeaderComp.vue";
-</script>
+<script setup></script>
 
 <template>
   <div class="flex flex-col min-h-screen w-screen">
-    <Header />
     <div
       class="absolute text-center top-[50%] left-[50%] transform-gpu -translate-x-1/2 -translate-y-1/2 w-full"
     >
