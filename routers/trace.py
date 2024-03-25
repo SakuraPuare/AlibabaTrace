@@ -9,10 +9,13 @@ list_cache = {}
 tree_cache = {}
 
 router = APIRouter(
-    prefix="/table",
-    tags=["table"],
+    prefix="/trace",
+    tags=["trace"],
 )
 
+
+def filter_folder(file: pathlib.Path) -> bool:
+    return file.is_dir() and 'trace' in file.name
 
 def filter_file(file: pathlib.Path) -> bool:
     return file.is_file() and file.suffix == ".csv"
@@ -24,7 +27,7 @@ def update_list_cache() -> None:
     if not table_folder.exists():
         return
     for i in table_folder.iterdir():
-        if i.is_dir():
+        if filter_folder(i):
             for j in i.iterdir():
                 name = str(j)
                 list_cache[md5(name)] = name
@@ -36,7 +39,7 @@ def update_tree_cache() -> None:
     if not table_folder.exists():
         return
     for i in table_folder.iterdir():
-        if i.is_dir():
+        if filter_folder(i):
             files = [j for j in i.iterdir() if filter_file(j)]
             if not files:
                 continue
