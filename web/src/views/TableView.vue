@@ -9,7 +9,7 @@ const TreeData = ref([]);
 const selectedItem = ref({});
 const getTreeData = () => {
   http
-    .get("/table/tree")
+    .get("/file/tree")
     .then((res) => {
       // clear data
       TreeData.value = [];
@@ -53,7 +53,7 @@ const TableData = ref([]);
 const TableColumns = ref([]);
 const getTableData = (name, page = 1) => {
   http
-    .get("/table/" + name, {
+    .get("/file/" + name, {
       params: {
         page: page,
       },
@@ -78,9 +78,6 @@ const getTableData = (name, page = 1) => {
         }
         TableData.value.push(obj);
       }
-    })
-    .catch((err) => {
-      console.log(err);
     });
 };
 const getMoreTableData = () => {
@@ -89,7 +86,7 @@ const getMoreTableData = () => {
   }
 
   http
-    .get("/table/" + selectedItem.value.id, {
+    .get("/file/" + selectedItem.value.id, {
       params: {
         page: TablePage.value++,
       },
@@ -112,9 +109,6 @@ const getMoreTableData = () => {
         }
         TableData.value.push(obj);
       }
-    })
-    .catch((err) => {
-      console.log(err);
     });
 };
 const onSelected = (data) => {
@@ -162,7 +156,7 @@ onMounted(() => {
 <template>
   <div class="flex w-full h-full">
     <div
-      class="flex flex-col justify-center items-center w-full max-w-[20%] h-full"
+      class="flex flex-col justify-center items-center w-[25%] h-full"
       style="background: #fafafa"
     >
       <Tree :data="TreeData" @select="onSelected" />
