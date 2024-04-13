@@ -11,6 +11,7 @@ router = APIRouter(
 async def base_dashboard():
     return {"message": "Dashboard Home"}
 
+
 @router.get("/users")
 async def dashboard_users():
     return {"message": "Dashboard Users"}

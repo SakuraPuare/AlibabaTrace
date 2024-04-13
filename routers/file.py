@@ -13,11 +13,14 @@ router = APIRouter(
     tags=["file"],
 )
 
+
 def filter_folder_as_trace(file: pathlib.Path) -> bool:
     return file.is_dir() and 'trace' in file.name
 
+
 def filter_file_as_trace(file: pathlib.Path) -> bool:
     return file.is_file() and file.suffix == ".csv" and 'task' in file.name
+
 
 def filter_file(file: pathlib.Path) -> bool:
     return file.is_file() and file.suffix == ".csv"
@@ -70,6 +73,7 @@ async def table_tree():
     global tree_cache
     update_tree_cache()
     return {"code": 200, "data": tree_cache, "count": len(tree_cache)}
+
 
 @router.get("/trace")
 async def table_trace():

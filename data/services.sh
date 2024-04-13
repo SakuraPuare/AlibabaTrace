@@ -1,7 +1,7 @@
 #!/bin/bash
-prepare_dir() {
-    mkdir -p data/NodeMetrics data/MSMetrics data/MSRTMCR data/CallGraph
-}
+#prepare_dir() {
+#    mkdir -p data/NodeMetrics data/MSMetrics data/MSRTMCR data/CallGraph
+#}
 
 # $1 = start_day, $2 = end_day
 # $3 = start_hour, $4 = end_hour
@@ -45,5 +45,5 @@ start_day=$(expr $(echo $start_date | cut -f1 -dd) + 0)
 start_hour=$(expr $(echo $start_date | cut -f2 -dd) + 0)
 end_day=$(expr $(echo $end_date | cut -f1 -dd) + 0)
 end_hour=$(expr $(echo $end_date | cut -f2 -dd) + 0)
-prepare_dir
+#prepare_dir
 fetch_data $start_day $end_day $start_hour $end_hour
