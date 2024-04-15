@@ -1,6 +1,6 @@
 #!/bin/bash
 #prepare_dir() {
-#    mkdir -p data/NodeMetrics data/MSMetrics data/MSRTMCR data/CallGraph
+#    mkdir -p database/NodeMetrics database/MSMetrics database/MSRTMCR database/CallGraph
 #}
 
 # $1 = start_day, $2 = end_day

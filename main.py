@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from tortoise.contrib.fastapi import register_tortoise
 
-from routers import dashboard, file
+from routers import dashboard, data
 
 app = FastAPI()
 
@@ -18,7 +19,7 @@ app.add_middleware(
 )
 
 app.include_router(dashboard.router)
-app.include_router(file.router)
+app.include_router(data.router)
 
 
 @app.get("/")
@@ -26,6 +27,10 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+register_tortoise(
+    app,
+    db_url="mysql://root:123456@localhost:3306/alibaba",
+    modules={"models": ["database.model"]},
+    generate_schemas=True,
+    add_exception_handlers=True,
+)

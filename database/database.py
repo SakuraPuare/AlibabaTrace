@@ -32,9 +32,9 @@ def process_data(data):
 
     for x in range(len(data)):
         data[x] = list(map(filter_data, data[x].split(',')))
-        # if len(data[x]) > 10:
-        #     idx = 3 if data[x][3] < data[x][4] else 4
-        #     data[x].pop(idx)
+        # if len(database[x]) > 10:
+        #     idx = 3 if database[x][3] < database[x][4] else 4
+        #     database[x].pop(idx)
 
     obj = [HostMeta(i) for i in data]
     session.add_all(obj)

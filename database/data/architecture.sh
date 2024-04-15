@@ -1,6 +1,6 @@
 url='http://aliopentrace.oss-cn-beijing.aliyuncs.com/amtrace'
-# mkdir data
-# cd data
+# mkdir database
+# cd database
 
 # mkdir container_meta_1k
 # mkdir host_meta_1k
