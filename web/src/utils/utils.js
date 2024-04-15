@@ -5,8 +5,8 @@ export const getHeightWithoutHeader = () => {
   return window.innerHeight - header.clientHeight;
 };
 
-export const getColumnDetails = (path) => {
-  const schema = getDataSchema(path);
+export const getColumnDetails = (name) => {
+  const schema = getDataSchema(name);
   const ret = [];
   for (let i in schema)
     ret.push({

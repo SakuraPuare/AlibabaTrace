@@ -68,7 +68,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <span class="text-2xl text-black text-center my-2"> File Tree </span>
+  <span class="text-2xl text-black text-center my-2"> File List </span>
   <el-scrollbar
     :height="ScrollbarHeight - 32 - 32 - 8 + 'px'"
     class="w-full mt-4"
@@ -84,7 +84,7 @@ onUnmounted(() => {
       @check="handleClickOnCheck"
       @node-click="handleClickOnNode"
     >
-      <template #default="{ node, data }">
+      <template #default="{ node }">
         <span class="text-base text-black w-full">{{ node.label }}</span>
       </template>
     </el-tree>

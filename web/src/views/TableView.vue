@@ -1,47 +1,25 @@
 <script setup>
-import Tree from "../components/tools/TreeTool.vue";
+import Tree from "../components/tools/FileListTool.vue";
 import http from "../utils/http.js";
 import { onMounted, ref } from "vue";
-import { getColumnDetails } from "../utils/utils.js";
 import { TableV2SortOrder } from "element-plus";
+import { getColumnDetails } from "../utils/utils.js";
 
 const TreeData = ref([]);
 const selectedItem = ref({});
 const getTreeData = () => {
   http
-    .get("/file/tree")
+    .get("/database/list")
     .then((res) => {
       // clear data
       TreeData.value = [];
-
-      let data = res.data.data;
-      for (let key in data) {
-        let children = [];
-        for (let file in data[key].files) {
-          children.push({
-            id: file,
-            path: [data[key].name, data[key].files[file]],
-            label: data[key].files[file],
-            children: [],
-          });
-        }
+      let data = res.data;
+      data.forEach((item) => {
         TreeData.value.push({
-          id: key,
-          path: [data[key].name],
-          label: data[key].name,
-          children: children,
-          disabled: true,
+          id: item,
+          label: item,
         });
-      }
-      // sort
-      TreeData.value.sort((a, b) => {
-        return b.label.localeCompare(a.label, "zh");
       });
-      for (let key in TreeData.value) {
-        TreeData.value[key].children.sort((a, b) => {
-          return a.label.localeCompare(b.label);
-        });
-      }
     })
     .catch((err) => {
       console.log(err);
@@ -53,66 +31,26 @@ const TableData = ref([]);
 const TableColumns = ref([]);
 const getTableData = (name, page = 1) => {
   http
-    .get("/file/" + name, {
+    .get("/database/" + name, {
       params: {
         page: page,
       },
     })
     .then((res) => {
-      TableData.value = [];
-      let data = res.data.data;
-
-      if (selectedItem.value.path[0].startsWith("microservice"))
-        // remove the first line
-        data.shift();
+      let data = res.data;
       // console.log(data);
-      for (let i = 0; i < data.length; i++) {
-        let row = data[i].split(",");
-        if (row?.length === 0) break;
-        let obj = {};
-        // remove last empty column
-        for (let j = 0; j < row.length; j++) {
-          const k = TableColumns.value[j]?.key;
-          if (!k) break;
-          obj[k] = row[j];
-        }
-        TableData.value.push(obj);
-      }
+      data.forEach((item) => {
+        TableData.value.push(item);
+      });
     });
 };
+
 const getMoreTableData = () => {
-  if (TableData.value.length === 0) {
-    return;
-  }
-
-  http
-    .get("/file/" + selectedItem.value.id, {
-      params: {
-        page: TablePage.value++,
-      },
-    })
-    .then((res) => {
-      let data = res.data.data;
-
-      if (selectedItem.value.path[0].startsWith("microservices"))
-        // remove the first line
-        data.shift();
-
-      for (let i = 0; i < data.length; i++) {
-        let row = data[i].split(",");
-        let obj = {};
-
-        for (let j = 0; j < row.length; j++) {
-          const k = TableColumns.value[j]?.key;
-          if (!k) break;
-          obj[k] = row[j];
-        }
-        TableData.value.push(obj);
-      }
-    });
+  getTableData(selectedItem.value.id, TablePage.value++);
 };
+
 const onSelected = (data) => {
-  // console.log(data)
+  // console.log(data);
   if (selectedItem.value.id !== data.id) {
     TableColumns.value = [];
     TableData.value = [];
@@ -120,14 +58,8 @@ const onSelected = (data) => {
   }
 
   selectedItem.value = data;
-  if (data.path?.length > 0) {
-    TableColumns.value = getColumnDetails(data.path);
-    getTableData(data.id, TablePage.value++);
-  } else {
-    TableColumns.value = [];
-    TableData.value = [];
-    TablePage.value = 1;
-  }
+  TableColumns.value = getColumnDetails(data.label);
+  getTableData(data.id);
 };
 
 const sortState = ref({
