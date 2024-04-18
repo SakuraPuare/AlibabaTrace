@@ -1,88 +1,81 @@
 <script setup>
-import { onMounted, onUnmounted, reactive, ref } from "vue";
-import { getHeightWithoutHeader } from "../../utils/utils.js";
-
-const updateHeight = () => {
-  ScrollbarHeight.value = getHeightWithoutHeader();
-};
+import { reactive, ref } from "vue";
 
 const getCurrentSelected = () => {
   return treeRef.value?.getCheckedNodes();
 };
 const setCheckedNodes = (nodes) => {
   treeRef.value?.setCheckedNodes(nodes);
-  currSelected.value = nodes[0];
-  emits("select", currSelected.value);
+  // console.log(treeRef.value);
+  if (treeData.allowMultiSelect) {
+    currSelected.value = nodes;
+    emits("select", currSelected.value);
+  } else {
+    currSelected.value = nodes[0];
+    emits("select", currSelected.value);
+  }
 };
 
-const handleClickOnCheck = (data) => {
-  console.log("click on check");
-
+const onClick = (data) => {
   // if selected
   let selected = getCurrentSelected();
-  console.log(selected);
+  // console.log(selected);
   if (selected?.length === 0) {
     setCheckedNodes([{}]);
     return;
   }
-  setCheckedNodes([data]);
-};
-
-const handleClickOnNode = (data) => {
-  if (data.disabled) {
-    return;
-  }
-
-  // if selected
-  let selected = getCurrentSelected();
-  if (selected.length > 0 && selected[0].id === data.id) {
-    // unselect
-    setCheckedNodes([{}]);
-    return;
-  }
-  setCheckedNodes([data]);
+  if (treeData.allowMultiSelect) {
+    setCheckedNodes(selected);
+  } else setCheckedNodes([data]);
 };
 
 const treeData = defineProps({
+  title: {
+    type: String,
+    default: "",
+  },
+  height: {
+    type: Number,
+    default: 0,
+  },
   data: {
     type: Array,
     default: () => [],
+  },
+  allowMultiSelect: {
+    type: Boolean,
+    default: false,
   },
 });
 const treeRef = ref(null);
 const currSelected = reactive({});
 
-const ScrollbarHeight = ref(0);
-
 const emits = defineEmits(["select"]);
 
-onMounted(() => {
-  updateHeight();
-
-  window.addEventListener("resize", updateHeight);
-});
-
-onUnmounted(() => {
-  window.removeEventListener("resize", updateHeight);
+defineExpose({
+  setCheckedNodes,
 });
 </script>
 
 <template>
-  <span class="text-2xl text-black text-center my-2"> File List </span>
+  <span class="text-2xl text-black text-center mt-2">
+    {{ treeData.title }}
+  </span>
   <el-scrollbar
-    :height="ScrollbarHeight - 32 - 32 - 8 + 'px'"
+    :height="treeData.height - 32 - 32 + 4 + 'px'"
     class="w-full mt-4"
   >
     <el-tree
       ref="treeRef"
       :data="treeData.data"
       accordion
+      check-on-click-node
       class="w-full h-fit"
+      highlight-current
       node-key="id"
       show-checkbox
       style="background: #fafafa"
-      @check="handleClickOnCheck"
-      @node-click="handleClickOnNode"
+      @check="onClick"
     >
       <template #default="{ node }">
         <span class="text-base text-black w-full">{{ node.label }}</span>

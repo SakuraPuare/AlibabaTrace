@@ -1,29 +1,24 @@
 <script setup>
 import Tree from "../components/tools/FileListTool.vue";
 import http from "../utils/http.js";
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import { TableV2SortOrder } from "element-plus";
-import { getColumnDetails } from "../utils/utils.js";
+import { getColumnDetails, getHeightWithoutHeader } from "../utils/utils.js";
 
 const TreeData = ref([]);
 const selectedItem = ref({});
 const getTreeData = () => {
-  http
-    .get("/database/list")
-    .then((res) => {
-      // clear data
-      TreeData.value = [];
-      let data = res.data;
-      data.forEach((item) => {
-        TreeData.value.push({
-          id: item,
-          label: item,
-        });
+  http.get("/database/list").then((res) => {
+    // clear data
+    TreeData.value = [];
+    let data = res.data;
+    data.forEach((item) => {
+      TreeData.value.push({
+        id: item,
+        label: item,
       });
-    })
-    .catch((err) => {
-      console.log(err);
     });
+  });
 };
 const TablePage = ref(1);
 const TableData = ref([]);
@@ -80,8 +75,20 @@ const onSort = (sortBy) => {
   sortState.value = sortBy;
 };
 
+const ScrollbarHeight = ref(0);
+const updateHeight = () => {
+  ScrollbarHeight.value = getHeightWithoutHeader();
+};
+
 onMounted(() => {
   getTreeData();
+
+  updateHeight();
+  addEventListener("resize", updateHeight);
+});
+
+onUnmounted(() => {
+  removeEventListener("resize", updateHeight);
 });
 </script>
 
@@ -91,7 +98,13 @@ onMounted(() => {
       class="flex flex-col justify-center items-center w-[25%] h-full"
       style="background: #fafafa"
     >
-      <Tree :data="TreeData" @select="onSelected" />
+      <Tree
+        :allow-multiple="false"
+        :data="TreeData"
+        :height="ScrollbarHeight"
+        :title="'Database List'"
+        @select="onSelected"
+      />
     </div>
     <div class="flex flex-col max-h-full mx-32 w-full pt-8">
       <!--      {{ selectedItem }}-->
