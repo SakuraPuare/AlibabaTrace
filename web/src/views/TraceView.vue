@@ -39,12 +39,15 @@ const getTreeData = () => {
 };
 const onTreeSelected = (data) => {
   // console.log("selected", data);
+  data = data[0];
   if (selectedTreeItem.value.id !== data.id) {
     // TableColumns.value = [];
     // TableData.value = [];
     TablePage.value = 1;
     JobData.value = [];
     TableSet.value = {};
+
+    SelectValue.value = "";
   }
 
   selectedTreeItem.value = data;
@@ -52,7 +55,6 @@ const onTreeSelected = (data) => {
   getTableData(data.id, TablePage.value++);
 };
 const TablePage = ref(1);
-// const TableData = ref([]);
 const TableSet = ref({});
 const getTableData = (name, page = 1) => {
   http
@@ -80,7 +82,6 @@ const getTableData = (name, page = 1) => {
 };
 const onJobSelected = (item) => {
   // console.log(item);
-
   echartsNodes.value = [];
   echartsEdges.value = [];
 
@@ -115,7 +116,7 @@ const onJobSelected = (item) => {
         if (!echartsNodes.value.find((n) => n.name === node.name))
           echartsNodes.value.push(node);
       } else {
-        for (let i = 1; i <= split.length; i++) {
+        for (let i = 1; i < split.length; i++) {
           const node = {
             name: job_name.id + "_" + split[i - 1],
             x: 0,
@@ -139,8 +140,8 @@ const onJobSelected = (item) => {
       }
     });
   });
-  // console.log(echartsNodes.value, echartsEdges.value);
 };
+const EchartsRef = ref(null);
 const echartsNodes = ref([]);
 const echartsEdges = ref([]);
 const echartsOption = ref({
@@ -152,7 +153,7 @@ const echartsOption = ref({
       let str = "";
       // for key value pair
       for (let key in params.data.attributes) {
-        str += key + ": " + params.data.attributes[key] + "<br>";
+        str += `${key}: ${params.data.attributes[key]}<br>`;
       }
       return str;
     },
@@ -169,30 +170,31 @@ const echartsOption = ref({
         repulsion: 10,
         edgeLength: 1,
       },
-      symbolSize: 40,
+      symbolSize: 80,
       roam: true,
       label: {
         show: true,
+        fontWeight: "bold",
       },
       edgeSymbol: ["circle", "arrow"],
       edgeSymbolSize: [8, 8],
       edgeLabel: {
-        fontSize: 15,
+        fontSize: 20,
       },
       data: echartsNodes,
       links: echartsEdges,
       lineStyle: {
-        opacity: 0.8,
+        opacity: 1,
         width: 2,
         curveness: 0,
       },
     },
   ],
+  method: "post",
 });
-const echartsHeight = ref(630);
 
-const getEchartsHeight = () => {
-  echartsHeight.value = getHeightWithoutHeader() * 0.8;
+const updateEchartsHeight = () => {
+  EchartsRef.value?.resize({ width: "auto", height: "auto" });
 };
 
 const ScrollbarHeight = ref(0);
@@ -229,42 +231,104 @@ const selectRandom = () => {
 };
 
 const addNode = () => {
+  const name = "Node_" + echartsNodes.value.length;
   echartsNodes.value.push({
-    name: "Node_" + echartsNodes.value.length,
+    name: name,
     x: 0,
     y: 0,
+    attributes: {},
   });
+
+  if (addNodeDirection.value === "in") {
+    if (!addNodeIsolated.value) {
+      // find add edges that from addNodeValue
+      let edges = echartsEdges.value.filter(
+        (edge) => edge.target === addNodeValue.value,
+      );
+      edges.forEach((edge) => {
+        edge.target = name;
+      });
+    }
+    echartsEdges.value.push({
+      source: name,
+      target: addNodeValue.value,
+    });
+  } else if (addNodeDirection.value === "out") {
+    if (!addNodeIsolated.value) {
+      // find add edges that to addNodeValue
+      let edges = echartsEdges.value.filter(
+        (edge) => edge.source === addNodeValue.value,
+      );
+      edges.forEach((edge) => {
+        edge.source = name;
+      });
+    }
+    echartsEdges.value.push({
+      source: addNodeValue.value,
+      target: name,
+    });
+  }
+  addNodeValue.value = "";
 };
 
 const removeNode = () => {
-  if (echartsNodes.value.length === 0) return;
+  let node = echartsNodes.value.find((o) => o.name === removeNodeValue.value);
+  if (!node) return;
+  console.log(node);
 
-  let random = Math.floor(Math.random() * echartsNodes.value.length);
-  let node = echartsNodes.value[random];
-  // remove edges
-  echartsEdges.value = echartsEdges.value.filter(
-    (edge) => edge.source !== node.name && edge.target !== node.name,
+  let sourceEdges = echartsEdges.value.filter(
+    (edge) => edge.target === node.name,
+  );
+  let targetEdges = echartsEdges.value.filter(
+    (edge) => edge.source === node.name,
   );
 
-  echartsNodes.value.splice(random, 1);
+  if (
+    !removeNodeConnection.value ||
+    !(sourceEdges.length === 1 && targetEdges.length === 1)
+  ) {
+    echartsEdges.value = echartsEdges.value.filter(
+      (edge) => !(edge.source === node.name || edge.target === node.name),
+    );
+  } else {
+    sourceEdges[0].target = targetEdges[0].target;
+    targetEdges[0].source = sourceEdges[0].source;
+  }
+  echartsNodes.value = echartsNodes.value.filter((n) => n.name !== node.name);
+
+  removeNodeValue.value = "";
 };
 
 const addEdge = () => {
-  let random = Math.floor(Math.random() * echartsNodes.value.length);
-  let source = echartsNodes.value[random].name;
-  random = Math.floor(Math.random() * echartsNodes.value.length);
-  let target = echartsNodes.value[random].name;
+  if (addEdgeFrom.value === addEdgeTo.value) return;
+
+  // if the edge already exists
+  if (
+    echartsEdges.value.find(
+      (edge) =>
+        edge.source === addEdgeFrom.value && edge.target === addEdgeTo.value,
+    )
+  )
+    return;
+
   echartsEdges.value.push({
-    source: source,
-    target: target,
+    source: addEdgeFrom.value,
+    target: addEdgeTo.value,
   });
+  addEdgeFrom.value = "";
+  addEdgeTo.value = "";
 };
 
 const removeEdge = () => {
-  if (echartsEdges.value.length === 0) return;
-
-  let random = Math.floor(Math.random() * echartsEdges.value.length);
-  echartsEdges.value.splice(random, 1);
+  echartsEdges.value = echartsEdges.value.filter(
+    (edge) =>
+      !(
+        removeEdgeFrom.value.includes(edge.source) &&
+        removeEdgeTo.value.includes(edge.target)
+      ),
+  );
+  removeEdgeFrom.value = "";
+  removeEdgeTo.value = "";
 };
 
 const shuffle = () => {
@@ -283,19 +347,61 @@ const shuffle = () => {
   }
 };
 
+const resetNode = () => {
+  let curr = TreeRef.value?.getCurrentSelected();
+  if (curr.length === 0) return;
+  onJobSelected(curr);
+};
+
 onMounted(() => {
   getTreeData();
-
   updateHeight();
-  getEchartsHeight();
-  addEventListener("resize", getEchartsHeight);
+  updateEchartsHeight();
+  addEventListener("resize", updateEchartsHeight);
   addEventListener("resize", updateHeight);
 });
 
 onUnmounted(() => {
   removeEventListener("resize", updateHeight);
-  removeEventListener("resize", getEchartsHeight);
+  removeEventListener("resize", updateEchartsHeight);
 });
+
+const SelectValue = ref("");
+
+const onSelectChange = () => {
+  if (SelectValue.value === "") {
+    DetailData.value = [];
+    return;
+  }
+
+  let job = echartsNodes.value.find((o) => o.name === SelectValue.value);
+  DetailData.value = Object.entries(job.attributes);
+  // console.log(DetailData.value);
+};
+
+const DetailData = ref([]);
+
+const showAddNodeDialog = ref(false);
+const showRemoveNodeDialog = ref(false);
+const showAddEdgeDialog = ref(false);
+const showRemoveEdgeDialog = ref(false);
+const addNodeValue = ref("");
+const addNodeDirection = ref("");
+const addNodeIsolated = ref(false);
+const removeNodeValue = ref("");
+const removeNodeConnection = ref(true);
+const addEdgeFrom = ref("");
+const addEdgeTo = ref("");
+const removeEdgeFrom = ref("");
+const removeEdgeTo = ref("");
+
+const onEchatsClick = (params) => {
+  // console.log(params);
+  if (params.dataType === "node") {
+    SelectValue.value = params.data.name;
+    DetailData.value = Object.entries(params.data.attributes);
+  }
+};
 </script>
 
 <template>
@@ -312,13 +418,11 @@ onUnmounted(() => {
       />
       <Tree
         ref="TreeRef"
-        :allow-multi-select="true"
         :data="JobData"
         :height="ScrollbarHeight * 0.6"
         :title="'Job List'"
         @select="onJobSelected"
       />
-
       <div
         class="flex place-content-center items-center h-16 w-full text-white space-x-2"
       >
@@ -327,81 +431,267 @@ onUnmounted(() => {
           @click="loadMore"
         >
           <font-awesome-icon :icon="faRotate" class="h-4 w-4" />
-          <span>加载</span>
+          <span class="sm:invisible md:visible">加载</span>
         </button>
         <button
           class="flex place-content-center items-center bg-blue-500 hover:bg-blue-600 active:bg-blue-700 h-fit p-2 rounded-3xl space-x-1"
           @click="selectAll"
         >
           <font-awesome-icon :icon="faCheck" class="h-4 w-4" />
-          <span>全选</span>
+          <span class="sm:invisible md:visible">全选</span>
         </button>
         <button
           class="flex place-content-center items-center bg-red-500 hover:bg-red-600 active:bg-red-700 h-fit p-2 rounded-3xl space-x-1"
           @click="selectNone"
         >
           <font-awesome-icon :icon="faXmark" class="h-4 w-4" />
-          <span>全不选</span>
+          <span class="sm:invisible md:visible">全不选</span>
         </button>
         <button
           class="flex place-content-center items-center bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 h-fit p-2 rounded-3xl space-x-1"
           @click="selectRandom"
         >
           <font-awesome-icon :icon="faShuffle" class="h-4 w-4" />
-          <span>随机</span>
+          <span class="sm:invisible md:visible">随机</span>
         </button>
       </div>
     </div>
     <!--    v-if="selectedTreeItem?.label"-->
-    <div class="flex flex-col max-h-full mx-32 w-full py-4 space-y-4">
+    <div class="flex flex-col max-h-full mx-16 w-full py-4 space-y-4">
       <!--      {{ JobData }}-->
       <!--      {{ selectedTreeItem }}-->
       <div id="echarts" class="h-full w-full border-2 rounded-2xl">
         <v-chart
+          ref="EchartsRef"
           :option="echartsOption"
-          :style="'height: ' + echartsHeight + 'px'"
+          @click="onEchatsClick"
         />
       </div>
       <div
         class="flex place-content-center items-center space-x-6 w-full h-16 text-white"
       >
         <button
-          class="h-fit min-w-24 p-2 bg-green-500 rounded-2xl border hover:bg-green-600 active:bg-green-700"
-          @click="addNode"
+          class="h-fit min-w-24 p-2 bg-blue-500 rounded-2xl border hover:bg-blue-600 active:bg-blue-700"
+          @click="resetNode"
         >
-          <font-awesome-icon :icon="faAdd" class="h-4 w-4" />
-          <span>添加节点</span>
-        </button>
-        <button
-          class="h-fit min-w-24 p-2 bg-red-500 rounded-2xl border hover:bg-red-600 active:bg-red-700"
-          @click="removeNode"
-        >
-          <font-awesome-icon :icon="faRemove" class="h-4 w-4" />
-          <span>删除节点</span>
+          <font-awesome-icon :icon="faRotate" class="h-4 w-4" />
+          <span class="">重新加载</span>
         </button>
         <button
           class="h-fit min-w-24 p-2 bg-green-500 rounded-2xl border hover:bg-green-600 active:bg-green-700"
-          @click="addEdge"
+          @click="showAddNodeDialog = true"
         >
           <font-awesome-icon :icon="faAdd" class="h-4 w-4" />
-          <span>添加边</span>
+          <span class="">添加节点</span>
         </button>
         <button
           class="h-fit min-w-24 p-2 bg-red-500 rounded-2xl border hover:bg-red-600 active:bg-red-700"
-          @click="removeEdge"
+          @click="showRemoveNodeDialog = true"
         >
           <font-awesome-icon :icon="faRemove" class="h-4 w-4" />
-          <span>删除边</span>
+          <span class="">删除节点</span>
+        </button>
+        <button
+          class="h-fit min-w-24 p-2 bg-green-500 rounded-2xl border hover:bg-green-600 active:bg-green-700"
+          @click="showAddEdgeDialog = true"
+        >
+          <font-awesome-icon :icon="faAdd" class="h-4 w-4" />
+          <span class="">添加边</span>
+        </button>
+        <button
+          class="h-fit min-w-24 p-2 bg-red-500 rounded-2xl border hover:bg-red-600 active:bg-red-700"
+          @click="showRemoveEdgeDialog = true"
+        >
+          <font-awesome-icon :icon="faRemove" class="h-4 w-4" />
+          <span class="">删除边</span>
         </button>
         <button
           class="h-fit min-w-24 p-2 bg-yellow-500 rounded-2xl border hover:bg-yellow-600 active:bg-yellow-700"
           @click="shuffle"
         >
           <font-awesome-icon :icon="faShuffle" class="h-4 w-4" />
-          <span>随机排列</span>
+          <span class="">随机排列</span>
         </button>
       </div>
     </div>
+    <div
+      :style="'height: ' + getHeightWithoutHeader() + 'px'"
+      class="flex flex-warp flex-col items-center justify-center place-content-center space-y-4 w-[40%] bg-gray-100 border"
+    >
+      <el-select
+        v-model="SelectValue"
+        placeholder="Select"
+        size="large"
+        style="width: 300px"
+        @change="onSelectChange"
+      >
+        <el-option
+          v-for="item in echartsNodes"
+          :key="item.name"
+          :label="item.name"
+          :value="item.name"
+        />
+      </el-select>
+
+      <div class="bg-white w-[300px] rounded border m-4 text-center">
+        <table v-if="SelectValue" class="w-full">
+          <tr>
+            <th>Key</th>
+            <th>Value</th>
+          </tr>
+
+          <tr v-for="(i, index) of DetailData" :key="index">
+            <td>{{ i[0] }}</td>
+            <td>{{ i[1] }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div>
+    <el-dialog
+      v-model="showAddNodeDialog"
+      draggable
+      title="要添加到哪个节点上？"
+    >
+      <div
+        class="flex flex-col place-content-center justify-center items-center space-y-4"
+      >
+        <el-select
+          v-model="addNodeValue"
+          placeholder="Select Node"
+          size="large"
+          style="width: 500px"
+          @change="onSelectChange"
+        >
+          <el-option
+            v-for="item in echartsNodes"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <el-select
+          v-model="addNodeDirection"
+          placeholder="Select Direction"
+          size="large"
+          style="width: 500px"
+        >
+          <el-option label="指离节点" value="out" />
+          <el-option label="指向节点" value="in" />
+        </el-select>
+        <el-checkbox v-model="addNodeIsolated">Isolated</el-checkbox>
+        <el-button class="w-fit" type="primary" @click="addNode"
+          >添加
+        </el-button>
+      </div>
+    </el-dialog>
+    <el-dialog
+      v-model="showRemoveNodeDialog"
+      draggable
+      title="要删除哪个节点？"
+    >
+      <div
+        class="flex flex-col place-content-center justify-center items-center space-y-4"
+      >
+        <el-select
+          v-model="removeNodeValue"
+          placeholder="Select Node"
+          size="large"
+          style="width: 500px"
+          @change="onSelectChange"
+        >
+          <el-option
+            v-for="item in echartsNodes"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <el-checkbox v-model="removeNodeConnection">保持连接</el-checkbox>
+        <el-button class="w-fit" type="danger" @click="removeNode"
+          >删除
+        </el-button>
+      </div>
+    </el-dialog>
+    <el-dialog
+      v-model="showAddEdgeDialog"
+      draggable
+      title="要添加从谁到谁的边？"
+    >
+      <div
+        class="flex flex-col place-content-center justify-center items-center space-y-4"
+      >
+        <el-select
+          v-model="addEdgeFrom"
+          placeholder="Select Node"
+          size="large"
+          style="width: 500px"
+          @change="onSelectChange"
+        >
+          <el-option
+            v-for="item in echartsNodes"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <el-select
+          v-model="addEdgeTo"
+          placeholder="Select Node"
+          size="large"
+          style="width: 500px"
+          @change="onSelectChange"
+        >
+          <el-option
+            v-for="item in echartsNodes"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <el-button class="w-fit" type="primary" @click="addEdge"
+          >添加
+        </el-button>
+      </div>
+    </el-dialog>
+    <el-dialog v-model="showRemoveEdgeDialog" draggable title="要删除哪条边？">
+      <div
+        class="flex flex-col place-content-center justify-center items-center space-y-4"
+      >
+        <el-select
+          v-model="removeEdgeFrom"
+          placeholder="Select Node From"
+          size="large"
+          style="width: 500px"
+          @change="onSelectChange"
+        >
+          <el-option
+            v-for="item in echartsNodes"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <el-select
+          v-model="removeEdgeTo"
+          placeholder="Select Node To"
+          size="large"
+          style="width: 500px"
+          @change="onSelectChange"
+        >
+          <el-option
+            v-for="item in echartsNodes"
+            :key="item.name"
+            :label="item.name"
+            :value="item.name"
+          />
+        </el-select>
+        <el-button class="w-fit" type="danger" @click="removeEdge"
+          >删除
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 

@@ -11,7 +11,7 @@ const setCheckedNodes = (nodes) => {
     currSelected.value = nodes;
     emits("select", currSelected.value);
   } else {
-    currSelected.value = nodes[0];
+    currSelected.value = nodes;
     emits("select", currSelected.value);
   }
 };
@@ -54,6 +54,7 @@ const emits = defineEmits(["select"]);
 
 defineExpose({
   setCheckedNodes,
+  getCurrentSelected,
 });
 </script>
 

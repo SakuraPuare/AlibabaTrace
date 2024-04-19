@@ -1,7 +1,7 @@
 <script setup></script>
 
 <template>
-  <div class="flex flex-col min-h-screen w-screen">
+  <div class="flex flex-col max-h-screen w-screen">
     <div
       class="absolute text-center top-[50%] left-[50%] transform-gpu -translate-x-1/2 -translate-y-1/2 w-full"
     >

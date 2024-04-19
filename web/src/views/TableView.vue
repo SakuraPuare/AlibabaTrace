@@ -45,6 +45,7 @@ const getMoreTableData = () => {
 };
 
 const onSelected = (data) => {
+  data = data[0];
   // console.log(data);
   if (selectedItem.value.id !== data.id) {
     TableColumns.value = [];
