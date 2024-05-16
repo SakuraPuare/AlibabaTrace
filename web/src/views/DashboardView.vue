@@ -20,9 +20,8 @@ const scatter = ref([]);
 
 onMounted(() => {
   axios.get("/heatmap.json").then((response) => {
-    cpu.value = response.data.cpu;
-    mem.value = response.data.mem;
-    heatmap.value = response.data.data;
+    console.log(response.data);
+    heatmap.value = response.data;
   });
   axios.get("/lines.json").then((response) => {
     lines.value = response.data.time;
@@ -33,7 +32,15 @@ onMounted(() => {
     mem_util_percent.value = response.data.mem_util_percent;
   });
   axios.get("/scatter.json").then((response) => {
-    scatter.value = response.data;
+    // normalization response.data
+    const x_max = Math.max(...response.data.map((item) => item[0]));
+    const y_max = Math.max(...response.data.map((item) => item[1]));
+    // use log scale
+    scatter.value = response.data.map((item) => [
+      Math.log(item[0] + 1) / Math.log(x_max + 1),
+      Math.log(item[1] + 1) / Math.log(y_max + 1),
+    ]);
+    console.log(scatter.value);
   });
 });
 
@@ -126,15 +133,16 @@ const chartsData = ref([
     tooltip: {},
     xAxis: {
       type: "category",
-      data: cpu,
+      // num from 0 to 100
+      data: Array.from({ length: 100 }, (_, i) => i),
     },
     yAxis: {
       type: "category",
-      data: mem,
+      data: Array.from({ length: 100 }, (_, i) => i),
     },
     visualMap: {
       min: 0,
-      max: 1500,
+      max: 500,
       calculable: true,
       realtime: false,
       inRange: {
@@ -165,25 +173,19 @@ const chartsData = ref([
           },
         },
         progressive: 1000,
-        animation: false,
+        animation: true,
       },
     ],
   },
   {
     title: {
-      text: "主机资源使用情况",
+      text: "资源使用情况",
     },
     tooltip: {
       trigger: "axis",
     },
     legend: {
-      data: [
-        "net_in",
-        "net_out",
-        "disk_io_percent",
-        "cpu_util_percent",
-        "mem_util_percent",
-      ],
+      data: ["net_in", "net_out", "disk_io", "cpu", "mem"],
     },
     grid: {
       left: "3%",
@@ -218,19 +220,19 @@ const chartsData = ref([
         data: net_out,
       },
       {
-        name: "disk_io_percent",
+        name: "disk_io",
         type: "line",
         stack: "总量",
         data: disk_io_percent,
       },
       {
-        name: "cpu_util_percent",
+        name: "cpu",
         type: "line",
         stack: "总量",
         data: cpu_util_percent,
       },
       {
-        name: "mem_util_percent",
+        name: "mem",
         type: "line",
         stack: "总量",
         data: mem_util_percent,
@@ -302,7 +304,7 @@ const height = getHeightWithoutHeader();
       <v-chart
         :id="'charts_' + index"
         :option="item"
-        :style="`height: ${height / 2 - 64}px; width: 600px`"
+        :style="`height: ${height / 2 - 32}px; width: 600px`"
         autoresize
         class="chart"
       />
