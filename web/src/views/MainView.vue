@@ -5,7 +5,7 @@
     <div
       class="absolute text-center top-[50%] left-[50%] transform-gpu -translate-x-1/2 -translate-y-1/2 w-full"
     >
-      <h1 class="text-6xl">Alibaba Cluster Trace Viewer</h1>
+      <h1 class="text-6xl">基于Python的阿里数据集分析及可视化系统</h1>
     </div>
   </div>
 </template>

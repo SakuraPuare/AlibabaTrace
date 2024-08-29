@@ -11,13 +11,14 @@ import { faLink } from "@fortawesome/free-solid-svg-icons";
   >
     <img alt="logo" class="h-8 w-8" src="/vite.svg" />
     <router-link to="/">
-      <span class="text-xl font-bold">Alibaba Cluster Trace Program</span>
+      <span class="text-xl font-bold">基于Python的阿里数据集分析及可视化系统</span>
     </router-link>
-    <ul class="text-xl text-white space-x-8">
-      <router-link to="/dashboard">Dashboard</router-link>
-      <router-link to="/table">Table</router-link>
-      <router-link to="/trace">Trace</router-link>
-      <router-link to="/about">About</router-link>
+    <ul class="text-base text-white space-x-8">
+      <router-link to="/dashboard">数据可视化分析</router-link>
+      <router-link to="/table">数据表可视化分析</router-link>
+      <router-link to="/trace">有向图可视化分析</router-link>
+      <router-link to="/analyse">算法应用可视化分析</router-link>
+      <!-- <router-link to="/about">About</router-link> -->
     </ul>
     <div class="flex-grow"></div>
     <div class="flex flex-row items-center justify-center space-x-8">

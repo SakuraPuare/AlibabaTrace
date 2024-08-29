@@ -9,7 +9,7 @@ const routes = [
   },
   { path: "/table", component: () => import("../views/TableView.vue") },
   { path: "/trace", component: () => import("../views/TraceView.vue") },
-
+  { path: "/analyse", component: () => import("../views/AnalyseView.vue") },
   // {path: '/login', component: () => import('../src/views/Login.vue')},
 ];
 

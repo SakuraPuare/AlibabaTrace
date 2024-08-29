@@ -4,3 +4,4 @@ tqdm~=4.66.2
 pymysql
 uvicorn
 tortoise-orm
+aiomysql
